@@ -3,6 +3,8 @@ import {call, put} from 'redux-saga/effects';
 import {setUserDetails} from 'app/Store/Slices/userDataSlice';
 import {signInUserAPI} from 'services/authenticationApi';
 
+const fakeapi = () => {};
+
 function* signInSaga({payload}) {
   try {
     const response = yield call(signInUserAPI, payload.data);
