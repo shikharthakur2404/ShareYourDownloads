@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import {spawn} from 'child_process';
 import {randomUUID} from 'crypto';
+import type {Request, Response, NextFunction} from 'express';
 
 const HOST = '127.0.0.1';
 const PORT = 47821;
@@ -34,6 +35,37 @@ const YOUTUBE_HOSTS = new Set([
 const app = express();
 app.use(cors());
 app.use(express.json({limit: '32kb'}));
+
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 30;
+const apiRateLimitStore = new Map<
+  string,
+  {count: number; windowStart: number}
+>();
+
+const apiRateLimiter = (req: Request, res: Response, next: NextFunction) => {
+  const key = req.ip || 'unknown';
+  const now = Date.now();
+  const current = apiRateLimitStore.get(key);
+
+  if (!current || now - current.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    apiRateLimitStore.set(key, {count: 1, windowStart: now});
+    next();
+    return;
+  }
+
+  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
+    res.status(429).json({
+      ok: false,
+      message: 'Too many requests. Please retry shortly.',
+    });
+    return;
+  }
+
+  current.count += 1;
+  apiRateLimitStore.set(key, current);
+  next();
+};
 
 const toUrl = (rawUrl: string): URL | null => {
   const trimmed = rawUrl.trim();
@@ -202,6 +234,8 @@ app.get('/health', async (_req, res) => {
     cookiesConfigured: Boolean(COOKIES_FILE),
   });
 });
+
+app.use('/api', apiRateLimiter);
 
 app.post('/api/download', async (req, res) => {
   const body = req.body as DownloadBody;
