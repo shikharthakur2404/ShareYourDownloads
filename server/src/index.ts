@@ -157,7 +157,12 @@ const downloadWithYtDlp = async (
   if (format === 'audio') {
     args.push('-x', '--audio-format', 'mp3');
   } else {
-    args.push('-f', 'bestvideo*+bestaudio/best', '--merge-output-format', 'mp4');
+    args.push(
+      '-f',
+      'bestvideo*+bestaudio/best',
+      '--merge-output-format',
+      'mp4',
+    );
   }
 
   args.push(url);

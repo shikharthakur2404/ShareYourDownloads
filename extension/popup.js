@@ -1,4 +1,6 @@
-const browserApi = globalThis.browser ?? globalThis.chrome;
+/* eslint-env browser */
+
+const browserApi = window.browser ?? window.chrome;
 const API_URL = 'http://127.0.0.1:47821/api/download';
 
 const urlInput = document.getElementById('urlInput');
@@ -30,7 +32,9 @@ const isValidYouTubeUrl = rawUrl => {
 
   let parsed;
   try {
-    parsed = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`);
+    parsed = new URL(
+      /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`,
+    );
   } catch {
     return false;
   }
@@ -43,7 +47,9 @@ const isValidYouTubeUrl = rawUrl => {
   }
 
   const isYoutubeHost =
-    host === 'youtube.com' || host === 'www.youtube.com' || host === 'm.youtube.com';
+    host === 'youtube.com' ||
+    host === 'www.youtube.com' ||
+    host === 'm.youtube.com';
 
   if (!isYoutubeHost) {
     return false;
@@ -83,9 +89,14 @@ pasteButton.addEventListener('click', async () => {
 
 tabButton.addEventListener('click', async () => {
   try {
-    const [tab] = await browserApi.tabs.query({active: true, currentWindow: true});
+    const [tab] = await browserApi.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     urlInput.value = (tab?.url || '').trim();
-    setStatus(tab?.url ? 'Loaded current tab URL.' : 'No active tab URL available.');
+    setStatus(
+      tab?.url ? 'Loaded current tab URL.' : 'No active tab URL available.',
+    );
   } catch {
     setStatus('Could not read active tab URL.');
   }
