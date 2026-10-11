@@ -1,79 +1,109 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Share Your Downloads
 
-# Getting Started
+Share Your Downloads is a minimal project for a simple flow:
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+1. Paste a YouTube URL
+2. Choose **Video** or **Audio**
+3. Start the download request
 
-## Step 1: Start the Metro Server
+The repo includes:
+- React Native mobile app (MVP UI)
+- Local Node/TypeScript backend (`server/`) that runs yt-dlp
+- MV3 browser extension (`extension/`) that calls the same backend
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## Mobile app (React Native)
 
-To start Metro, run the following command from the _root_ of your React Native project:
+The app keeps the lightweight MVP UI:
+- URL input + paste-from-clipboard
+- Video/Audio selector
+- Download action with status/progress
+- YouTube URL validation (`youtube.com/watch`, `youtube.com/shorts`, `youtu.be`)
+
+### Run mobile app
+
+> Ensure the React Native environment is already configured: https://reactnative.dev/docs/environment-setup
+
+Install root dependencies:
 
 ```bash
-# using npm
+npm install
+```
+
+Start Metro:
+
+```bash
 npm start
-
-# OR using Yarn
-yarn start
 ```
 
-## Step 2: Start your Application
-
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
+Run Android:
 
 ```bash
-# using npm
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### For iOS
+Run iOS:
 
 ```bash
-# using npm
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+## Local backend server (`server/`)
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+The backend listens on `http://127.0.0.1:47821` and exposes:
+- `GET /health`
+- `POST /api/download` with body `{ "url": string, "format": "video" | "audio" }`
+- `GET /api/files/:id`
 
-## Step 3: Modifying your App
+### Backend setup
 
-Now that you have successfully run the app, let's modify it.
+```bash
+cd server
+npm install
+npm run dev
+```
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+Optional env vars:
+- `SYD_COOKIES_FILE` — path to an exported cookies file used by yt-dlp
+- `SYD_YTDLP_BINARY` — custom yt-dlp binary name/path
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+### yt-dlp requirement
 
-## Congratulations! :tada:
+Install yt-dlp on your machine and ensure `yt-dlp` is on PATH.
+If yt-dlp is unavailable (or backend is unreachable), the mobile app falls back to an honest stub response (`isStub: true`) and does not claim real downloads are working.
 
-You've successfully run and modified your React Native App. :partying_face:
+### Android emulator host note
 
-### Now what?
+When the mobile app runs on Android emulator, `127.0.0.1` inside the app points to the emulator itself. The app therefore calls backend at:
+- `http://10.0.2.2:47821` (Android emulator)
+- `http://127.0.0.1:47821` (iOS simulator)
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+## Browser extension (`extension/`)
 
-# Troubleshooting
+The MV3 extension provides:
+- Paste URL from clipboard
+- Use active tab URL
+- Video/Audio choice
+- Download trigger via the same local backend API
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+### Load extension (Chrome)
 
-# Learn More
+1. Go to `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select `/home/runner/work/ShareYourDownloads/ShareYourDownloads/extension`
 
-To learn more about React Native, take a look at the following resources:
+### Load extension (Firefox)
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+1. Go to `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on**
+3. Select `/home/runner/work/ShareYourDownloads/ShareYourDownloads/extension/manifest.json`
+
+## Current limitations
+
+- Real YouTube downloads depend on local backend + local yt-dlp availability.
+- Cloud/shared IP environments may hit YouTube anti-bot checks.
+- Optional cookies file can improve local success rates; no credential scraping or DRM bypass is implemented.
+
+## Legal note
+
+Downloading from YouTube may violate YouTube Terms of Service and copyright law depending on content and jurisdiction. Use this project only for content you have rights to access offline and for personal use.

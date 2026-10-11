@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Share Your Downloads",
+  "version": "0.1.0",
+  "description": "Send YouTube URLs to the local Share Your Downloads backend.",
+  "action": {
+    "default_title": "Share Your Downloads",
+    "default_popup": "popup.html"
+  },
+  "permissions": ["activeTab", "tabs"],
+  "host_permissions": [
+    "http://127.0.0.1:47821/*",
+    "http://localhost:47821/*"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "shareyourdownloads@example.com",
+      "strict_min_version": "109.0"
+    }
+  }
+}
