@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Share Your Downloads</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Share Your Downloads</h1>
+      <p class="caption">Paste a YouTube URL or pull from the current tab.</p>
+
+      <label for="urlInput">YouTube URL</label>
+      <textarea id="urlInput" rows="3" placeholder="https://youtube.com/watch?v=..."></textarea>
+
+      <div class="row">
+        <button id="pasteButton" type="button">Paste</button>
+        <button id="tabButton" type="button">Use tab URL</button>
+      </div>
+
+      <div class="toggle" role="radiogroup" aria-label="Format">
+        <button id="videoButton" class="selected" data-format="video" type="button">Video</button>
+        <button id="audioButton" data-format="audio" type="button">Audio</button>
+      </div>
+
+      <button id="downloadButton" class="download" type="button">Download</button>
+      <p id="status" aria-live="polite">Ready.</p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

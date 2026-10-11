@@ -1,28 +1,29 @@
 # Share Your Downloads
 
-Share Your Downloads is a minimal React Native app for a quick flow:
+Share Your Downloads is a minimal project for a simple flow:
 
 1. Paste a YouTube URL
 2. Choose **Video** or **Audio**
-3. Tap **Download**
+3. Start the download request
 
-## MVP Status
+The repo includes:
+- React Native mobile app (MVP UI)
+- Local Node/TypeScript backend (`server/`) that runs yt-dlp
+- MV3 browser extension (`extension/`) that calls the same backend
 
-This repo currently ships an MVP UI and a **local stub download service**.
+## Mobile app (React Native)
 
+The app keeps the lightweight MVP UI:
 - URL input + paste-from-clipboard
-- Video / Audio selector
-- Download button with status and progress feedback
-- YouTube URL validation for:
-  - `youtube.com/watch?...`
-  - `youtube.com/shorts/...`
-  - `youtu.be/...`
+- Video/Audio selector
+- Download action with status/progress
+- YouTube URL validation (`youtube.com/watch`, `youtube.com/shorts`, `youtu.be`)
 
-## Run the app
+### Run mobile app
 
-> Make sure your React Native environment is already set up: https://reactnative.dev/docs/environment-setup
+> Ensure the React Native environment is already configured: https://reactnative.dev/docs/environment-setup
 
-Install dependencies:
+Install root dependencies:
 
 ```bash
 npm install
@@ -46,18 +47,63 @@ Run iOS:
 npm run ios
 ```
 
+## Local backend server (`server/`)
+
+The backend listens on `http://127.0.0.1:47821` and exposes:
+- `GET /health`
+- `POST /api/download` with body `{ "url": string, "format": "video" | "audio" }`
+- `GET /api/files/:id`
+
+### Backend setup
+
+```bash
+cd server
+npm install
+npm run dev
+```
+
+Optional env vars:
+- `SYD_COOKIES_FILE` — path to an exported cookies file used by yt-dlp
+- `SYD_YTDLP_BINARY` — custom yt-dlp binary name/path
+
+### yt-dlp requirement
+
+Install yt-dlp on your machine and ensure `yt-dlp` is on PATH.
+If yt-dlp is unavailable (or backend is unreachable), the mobile app falls back to an honest stub response (`isStub: true`) and does not claim real downloads are working.
+
+### Android emulator host note
+
+When the mobile app runs on Android emulator, `127.0.0.1` inside the app points to the emulator itself. The app therefore calls backend at:
+- `http://10.0.2.2:47821` (Android emulator)
+- `http://127.0.0.1:47821` (iOS simulator)
+
+## Browser extension (`extension/`)
+
+The MV3 extension provides:
+- Paste URL from clipboard
+- Use active tab URL
+- Video/Audio choice
+- Download trigger via the same local backend API
+
+### Load extension (Chrome)
+
+1. Go to `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select `/home/runner/work/ShareYourDownloads/ShareYourDownloads/extension`
+
+### Load extension (Firefox)
+
+1. Go to `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on**
+3. Select `/home/runner/work/ShareYourDownloads/ShareYourDownloads/extension/manifest.json`
+
 ## Current limitations
 
-- Real YouTube media download is **not implemented yet** in this MVP.
-- The app currently records a download request through a local stub service and reports progress/status honestly.
-- A real downloader engine (for example, yt-dlp integration or a backend API) still needs to be connected.
+- Real YouTube downloads depend on local backend + local yt-dlp availability.
+- Cloud/shared IP environments may hit YouTube anti-bot checks.
+- Optional cookies file can improve local success rates; no credential scraping or DRM bypass is implemented.
 
 ## Legal note
 
-Downloading from YouTube may violate YouTube Terms of Service and copyright law depending on the content and jurisdiction. Use this app only for content you have rights to access offline and for personal use.
-
-## Possible next steps (out of scope for this PR)
-
-- Plug in a real downloader backend/service boundary already added in the app
-- Add support for other social/video platforms
-- Build a companion browser extension
+Downloading from YouTube may violate YouTube Terms of Service and copyright law depending on content and jurisdiction. Use this project only for content you have rights to access offline and for personal use.
