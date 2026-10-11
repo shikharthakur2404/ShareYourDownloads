@@ -1,4 +1,8 @@
-const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com']);
+const YOUTUBE_HOSTS = new Set([
+  'youtube.com',
+  'www.youtube.com',
+  'm.youtube.com',
+]);
 const YOUTU_BE_HOSTS = new Set(['youtu.be', 'www.youtu.be']);
 
 const toUrl = (rawUrl: string): URL | null => {
@@ -7,7 +11,9 @@ const toUrl = (rawUrl: string): URL | null => {
     return null;
   }
 
-  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const candidate = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
 
   try {
     return new URL(candidate);

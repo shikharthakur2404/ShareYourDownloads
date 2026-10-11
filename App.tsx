@@ -1,4 +1,3 @@
-import 'react-native-gesture-handler';
 import React, {useMemo, useState} from 'react';
 import {
   ActivityIndicator,
@@ -11,8 +10,14 @@ import {
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 
-import {requestDownload, type DownloadFormat} from './src/services/downloadService';
-import {getYouTubeUrlError, isValidYouTubeUrl} from './src/utils/youtubeValidation';
+import {
+  requestDownload,
+  type DownloadFormat,
+} from './src/services/downloadService';
+import {
+  getYouTubeUrlError,
+  isValidYouTubeUrl,
+} from './src/utils/youtubeValidation';
 
 type DownloadPhase = 'idle' | 'running' | 'done' | 'error';
 
@@ -21,7 +26,9 @@ const App = () => {
   const [format, setFormat] = useState<DownloadFormat>('video');
   const [phase, setPhase] = useState<DownloadPhase>('idle');
   const [progress, setProgress] = useState(0);
-  const [statusMessage, setStatusMessage] = useState('Paste a YouTube URL to begin.');
+  const [statusMessage, setStatusMessage] = useState(
+    'Paste a YouTube URL to begin.',
+  );
 
   const urlError = useMemo(() => getYouTubeUrlError(url), [url]);
 
@@ -38,7 +45,8 @@ const App = () => {
     if (!isValidYouTubeUrl(url)) {
       setPhase('error');
       setStatusMessage(
-        getYouTubeUrlError(url) ?? 'Please enter a valid YouTube URL before downloading.',
+        getYouTubeUrlError(url) ??
+          'Please enter a valid YouTube URL before downloading.',
       );
       return;
     }
@@ -69,7 +77,9 @@ const App = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Text style={styles.title}>Share Your Downloads</Text>
-        <Text style={styles.subtitle}>Paste a YouTube link and pick Video or Audio.</Text>
+        <Text style={styles.subtitle}>
+          Paste a YouTube link and pick Video or Audio.
+        </Text>
 
         <View style={styles.row}>
           <TextInput
@@ -81,12 +91,17 @@ const App = () => {
             editable={!isBusy}
             style={[styles.input, phase === 'error' ? styles.inputError : null]}
           />
-          <Pressable style={styles.secondaryButton} onPress={onPaste} disabled={isBusy}>
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={onPaste}
+            disabled={isBusy}>
             <Text style={styles.secondaryButtonText}>Paste</Text>
           </Pressable>
         </View>
 
-        {url.length > 0 && urlError ? <Text style={styles.errorText}>{urlError}</Text> : null}
+        {url.length > 0 && urlError ? (
+          <Text style={styles.errorText}>{urlError}</Text>
+        ) : null}
 
         <View style={styles.toggleContainer}>
           {(['video', 'audio'] as DownloadFormat[]).map(option => {
@@ -94,10 +109,17 @@ const App = () => {
             return (
               <Pressable
                 key={option}
-                style={[styles.toggleButton, selected ? styles.toggleButtonActive : null]}
+                style={[
+                  styles.toggleButton,
+                  selected ? styles.toggleButtonActive : null,
+                ]}
                 onPress={() => setFormat(option)}
                 disabled={isBusy}>
-                <Text style={[styles.toggleText, selected ? styles.toggleTextActive : null]}>
+                <Text
+                  style={[
+                    styles.toggleText,
+                    selected ? styles.toggleTextActive : null,
+                  ]}>
                   {option === 'video' ? 'Video' : 'Audio'}
                 </Text>
               </Pressable>
@@ -106,10 +128,15 @@ const App = () => {
         </View>
 
         <Pressable
-          style={[styles.primaryButton, isBusy ? styles.primaryButtonDisabled : null]}
+          style={[
+            styles.primaryButton,
+            isBusy ? styles.primaryButtonDisabled : null,
+          ]}
           onPress={onDownload}
           disabled={isBusy}>
-          <Text style={styles.primaryButtonText}>{isBusy ? 'Starting...' : 'Download'}</Text>
+          <Text style={styles.primaryButtonText}>
+            {isBusy ? 'Starting...' : 'Download'}
+          </Text>
         </Pressable>
 
         <View style={styles.statusCard}>
