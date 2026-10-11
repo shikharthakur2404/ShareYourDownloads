@@ -235,9 +235,7 @@ app.get('/health', async (_req, res) => {
   });
 });
 
-app.use('/api', apiRateLimiter);
-
-app.post('/api/download', async (req, res) => {
+app.post('/api/download', apiRateLimiter, async (req, res) => {
   const body = req.body as DownloadBody;
 
   const url = body.url?.trim();
@@ -293,10 +291,10 @@ app.post('/api/download', async (req, res) => {
   }
 });
 
-app.get('/api/files/:id', async (req, res) => {
+app.get('/api/files/:id', apiRateLimiter, async (req, res) => {
   const {id} = req.params;
 
-  if (!/^[a-zA-Z0-9-]+$/.test(id)) {
+  if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
     res.status(400).json({ok: false, message: 'Invalid file id.'});
     return;
   }
