@@ -88,6 +88,30 @@ button:disabled {
   color: #03261f;
 }
 
+.drive-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #ced6fb;
+  cursor: pointer;
+}
+
+.drive-toggle input {
+  width: 14px;
+  height: 14px;
+  accent-color: #2f64ff;
+}
+
+.drive-link {
+  margin: 0;
+  font-size: 12px;
+}
+
+.drive-link a {
+  color: #7dffc4;
+}
+
 #status {
   margin: 0;
   font-size: 12px;

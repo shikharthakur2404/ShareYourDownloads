@@ -29,6 +29,10 @@ const App = () => {
   const [statusMessage, setStatusMessage] = useState(
     'Paste a YouTube URL to begin.',
   );
+  const [uploadToDrive, setUploadToDrive] = useState(false);
+  const [driveWebViewLink, setDriveWebViewLink] = useState<string | null>(
+    null,
+  );
 
   const urlError = useMemo(() => getYouTubeUrlError(url), [url]);
 
@@ -53,21 +57,33 @@ const App = () => {
 
     setPhase('running');
     setProgress(0);
-    setStatusMessage(`Starting ${format} download request...`);
+    setDriveWebViewLink(null);
+    setStatusMessage(
+      uploadToDrive
+        ? `Starting ${format} download + Drive upload...`
+        : `Starting ${format} download request...`,
+    );
 
     const response = await requestDownload({
       url,
       format,
+      uploadToDrive,
       onProgress: nextProgress => setProgress(nextProgress),
     });
 
     if (response.ok) {
       setProgress(100);
       setPhase('done');
+      if (response.drive?.uploaded && response.drive.webViewLink) {
+        setDriveWebViewLink(response.drive.webViewLink);
+      }
       setStatusMessage(
-        response.fileUrl
-          ? `Download ready (${response.requestId}).`
-          : `Download started (${response.requestId}).`,
+        response.drive?.uploaded
+          ? `Download ready and saved to Drive (${response.requestId}).`
+          : response.message ||
+              (response.fileUrl
+                ? `Download ready (${response.requestId}).`
+                : `Download started (${response.requestId}).`),
       );
       return;
     }
@@ -137,6 +153,22 @@ const App = () => {
         </View>
 
         <Pressable
+          style={styles.driveRow}
+          onPress={() => setUploadToDrive(value => !value)}
+          disabled={isBusy}>
+          <View
+            style={[
+              styles.checkbox,
+              uploadToDrive ? styles.checkboxChecked : null,
+            ]}>
+            {uploadToDrive ? (
+              <Text style={styles.checkboxMark}>✓</Text>
+            ) : null}
+          </View>
+          <Text style={styles.driveLabel}>Save to Google Drive</Text>
+        </Pressable>
+
+        <Pressable
           style={[
             styles.primaryButton,
             isBusy ? styles.primaryButtonDisabled : null,
@@ -154,6 +186,9 @@ const App = () => {
             {isBusy ? <ActivityIndicator size="small" /> : null}
           </View>
           <Text style={styles.statusMessage}>{statusMessage}</Text>
+          {driveWebViewLink ? (
+            <Text style={styles.driveLink}>{driveWebViewLink}</Text>
+          ) : null}
           <Text style={styles.progressLabel}>Progress: {progress}%</Text>
         </View>
       </View>
@@ -234,6 +269,38 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     color: '#ffffff',
+  },
+  driveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#4e5e8f',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#2f64ff',
+    borderColor: '#2f64ff',
+  },
+  checkboxMark: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  driveLabel: {
+    color: '#dbe2ff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  driveLink: {
+    color: '#7dffc4',
+    fontSize: 12,
   },
   primaryButton: {
     backgroundColor: '#00b894',

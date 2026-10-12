@@ -5,7 +5,15 @@ export type DownloadFormat = 'video' | 'audio';
 export interface DownloadRequest {
   url: string;
   format: DownloadFormat;
+  uploadToDrive?: boolean;
   onProgress?: (progress: number) => void;
+}
+
+export interface DriveUploadInfo {
+  uploaded: boolean;
+  fileId?: string;
+  webViewLink?: string;
+  error?: string;
 }
 
 export interface DownloadResponse {
@@ -14,6 +22,7 @@ export interface DownloadResponse {
   message: string;
   requestId: string;
   fileUrl?: string;
+  drive?: DriveUploadInfo;
 }
 
 const SERVER_BASE_URL =
@@ -37,10 +46,18 @@ const makeErrorResponse = (message: string): DownloadResponse => ({
   requestId: `err-${Date.now()}`,
 });
 
+interface ApiDrivePayload {
+  uploaded: boolean;
+  fileId?: string;
+  webViewLink?: string;
+  error?: string;
+}
+
 interface ApiDownloadSuccessResponse {
   ok: true;
   id: string;
   fileUrl: string;
+  drive?: ApiDrivePayload;
 }
 
 interface ApiDownloadErrorResponse {
@@ -51,6 +68,7 @@ interface ApiDownloadErrorResponse {
 export const requestDownload = async ({
   url,
   format,
+  uploadToDrive = false,
   onProgress,
 }: DownloadRequest): Promise<DownloadResponse> => {
   onProgress?.(5);
@@ -58,13 +76,15 @@ export const requestDownload = async ({
   onProgress?.(20);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  // Downloads (and optional Drive upload) can take several minutes.
+  const timeoutMs = uploadToDrive ? 300_000 : 180_000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(`${SERVER_BASE_URL}/api/download`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({url, format}),
+      body: JSON.stringify({url, format, uploadToDrive}),
       signal: controller.signal,
     });
 
@@ -76,12 +96,31 @@ export const requestDownload = async ({
 
     if (response.ok && payload?.ok && 'id' in payload) {
       onProgress?.(100);
+      const drive = payload.drive
+        ? {
+            uploaded: payload.drive.uploaded,
+            fileId: payload.drive.fileId,
+            webViewLink: payload.drive.webViewLink,
+            error: payload.drive.error,
+          }
+        : undefined;
+
+      let message = 'Download started on local backend.';
+      if (drive?.uploaded && drive.webViewLink) {
+        message = 'Download ready and saved to Google Drive.';
+      } else if (uploadToDrive && drive && !drive.uploaded) {
+        message = `Download ready. Drive upload failed: ${
+          drive.error || 'unknown error'
+        }`;
+      }
+
       return {
         ok: true,
         isStub: false,
-        message: 'Download started on local backend.',
+        message,
         requestId: payload.id,
         fileUrl: `${SERVER_BASE_URL}${payload.fileUrl}`,
+        drive,
       };
     }
 

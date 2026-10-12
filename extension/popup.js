@@ -2,12 +2,15 @@
 
 const browserApi = window.browser ?? window.chrome;
 const API_URL = 'http://127.0.0.1:47821/api/download';
+const HEALTH_URL = 'http://127.0.0.1:47821/health';
 
 const urlInput = document.getElementById('urlInput');
 const status = document.getElementById('status');
+const driveLink = document.getElementById('driveLink');
 const pasteButton = document.getElementById('pasteButton');
 const tabButton = document.getElementById('tabButton');
 const downloadButton = document.getElementById('downloadButton');
+const driveToggle = document.getElementById('driveToggle');
 const formatButtons = Array.from(document.querySelectorAll('.toggle button'));
 
 let selectedFormat = 'video';
@@ -18,10 +21,32 @@ const setStatus = (message, tone = 'info') => {
   status.dataset.tone = tone;
 };
 
+const clearDriveLink = () => {
+  driveLink.hidden = true;
+  driveLink.textContent = '';
+};
+
+const setDriveLink = (href, label) => {
+  driveLink.hidden = false;
+  driveLink.replaceChildren();
+  const anchor = document.createElement('a');
+  anchor.href = href;
+  anchor.target = '_blank';
+  anchor.rel = 'noopener noreferrer';
+  anchor.textContent = label;
+  driveLink.appendChild(anchor);
+};
+
 const setBusy = busy => {
   isBusy = busy;
-  [pasteButton, tabButton, downloadButton, ...formatButtons].forEach(button => {
-    button.disabled = busy;
+  [
+    pasteButton,
+    tabButton,
+    downloadButton,
+    driveToggle,
+    ...formatButtons,
+  ].forEach(control => {
+    control.disabled = busy;
   });
 };
 
@@ -69,6 +94,27 @@ const isValidYouTubeUrl = rawUrl => {
 
 const getTrimmedUrl = () => urlInput.value.trim();
 
+const refreshDriveAvailability = async () => {
+  try {
+    const response = await fetch(HEALTH_URL);
+    const data = await response.json().catch(() => ({}));
+    if (data.driveConfigured) {
+      driveToggle.disabled = false;
+      driveToggle.title = '';
+      return;
+    }
+  } catch {
+    // Server offline — leave toggle usable; download path already reports offline.
+  }
+
+  if (driveToggle.checked) {
+    setStatus(
+      'Google Drive is not configured on the server. Download will still work; Drive upload will report a non-fatal error.',
+      'warn',
+    );
+  }
+};
+
 formatButtons.forEach(button => {
   button.addEventListener('click', () => {
     selectedFormat = button.dataset.format;
@@ -76,6 +122,12 @@ formatButtons.forEach(button => {
       option.classList.toggle('selected', option === button);
     });
   });
+});
+
+driveToggle.addEventListener('change', () => {
+  if (driveToggle.checked) {
+    refreshDriveAvailability();
+  }
 });
 
 pasteButton.addEventListener('click', async () => {
@@ -139,21 +191,45 @@ downloadButton.addEventListener('click', async () => {
   }
 
   setBusy(true);
-  setStatus(`Starting ${selectedFormat} download...`, 'info');
+  clearDriveLink();
+  const uploadToDrive = driveToggle.checked;
+  setStatus(
+    uploadToDrive
+      ? `Starting ${selectedFormat} download + Drive upload...`
+      : `Starting ${selectedFormat} download...`,
+    'info',
+  );
 
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({url, format: selectedFormat}),
+      body: JSON.stringify({
+        url,
+        format: selectedFormat,
+        uploadToDrive,
+      }),
     });
 
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok || !data.ok) {
-      const detail =
-        data.message || `Request failed (${response.status}).`;
+      const detail = data.message || `Request failed (${response.status}).`;
       setStatus(`Backend error: ${detail}`, 'error');
+      return;
+    }
+
+    if (data.drive?.uploaded && data.drive.webViewLink) {
+      setStatus(`Download ready: ${data.fileName} (saved to Drive)`, 'success');
+      setDriveLink(data.drive.webViewLink, 'Open in Google Drive');
+      return;
+    }
+
+    if (uploadToDrive && data.drive && !data.drive.uploaded) {
+      setStatus(
+        `Download ready: ${data.fileName}. Drive upload failed: ${data.drive.error || 'unknown error'}`,
+        'warn',
+      );
       return;
     }
 
@@ -167,3 +243,5 @@ downloadButton.addEventListener('click', async () => {
     setBusy(false);
   }
 });
+
+refreshDriveAvailability();

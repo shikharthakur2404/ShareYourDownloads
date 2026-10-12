@@ -5,6 +5,11 @@ import path from 'path';
 import {spawn} from 'child_process';
 import {randomUUID} from 'crypto';
 import {rateLimit} from 'express-rate-limit';
+import {
+  isDriveConfigured,
+  uploadFileToDrive,
+  type DriveUploadResult,
+} from './drive';
 
 const HOST = '127.0.0.1';
 const PORT = 47821;
@@ -17,6 +22,7 @@ type DownloadFormat = 'video' | 'audio';
 interface DownloadBody {
   url?: string;
   format?: DownloadFormat;
+  uploadToDrive?: boolean;
 }
 
 interface DownloadResult {
@@ -205,6 +211,17 @@ const downloadWithYtDlp = async (
   return {id, filePath: fallbackPath};
 };
 
+const maybeUploadToDrive = async (
+  filePath: string,
+  uploadToDrive: boolean,
+): Promise<DriveUploadResult | undefined> => {
+  if (!uploadToDrive) {
+    return undefined;
+  }
+
+  return uploadFileToDrive(filePath);
+};
+
 app.get('/health', async (_req, res) => {
   const ytDlpInstalled = await isYtDlpInstalled();
 
@@ -212,6 +229,7 @@ app.get('/health', async (_req, res) => {
     ok: true,
     ytDlpInstalled,
     cookiesConfigured: Boolean(COOKIES_FILE),
+    driveConfigured: isDriveConfigured(),
   });
 });
 
@@ -220,11 +238,13 @@ app.post('/api/download', apiRateLimiter, async (req, res) => {
 
   const url = body.url?.trim();
   const format = body.format;
+  const uploadToDrive = body.uploadToDrive === true;
 
   if (!url || (format !== 'video' && format !== 'audio')) {
     res.status(400).json({
       ok: false,
-      message: 'Request must include { url, format: "video" | "audio" }.',
+      message:
+        'Request must include { url, format: "video" | "audio" }. Optional: uploadToDrive.',
     });
     return;
   }
@@ -250,6 +270,7 @@ app.post('/api/download', apiRateLimiter, async (req, res) => {
 
   try {
     const result = await downloadWithYtDlp(url, format);
+    const drive = await maybeUploadToDrive(result.filePath, uploadToDrive);
 
     res.status(201).json({
       ok: true,
@@ -257,6 +278,7 @@ app.post('/api/download', apiRateLimiter, async (req, res) => {
       format,
       fileName: path.basename(result.filePath),
       fileUrl: `/api/files/${result.id}`,
+      ...(drive ? {drive} : {}),
     });
   } catch (error) {
     const message =
@@ -292,6 +314,38 @@ app.get('/api/files/:id', apiRateLimiter, async (req, res) => {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Unable to read requested file.';
+    res.status(500).json({ok: false, message});
+  }
+});
+
+app.post('/api/files/:id/drive', apiRateLimiter, async (req, res) => {
+  const {id} = req.params;
+
+  if (typeof id !== 'string' || !/^[a-zA-Z0-9-]+$/.test(id)) {
+    res.status(400).json({ok: false, message: 'Invalid file id.'});
+    return;
+  }
+
+  try {
+    await fs.mkdir(DOWNLOADS_DIR, {recursive: true});
+    const filePath = await findDownloadedPath(id);
+
+    if (!filePath) {
+      res.status(404).json({ok: false, message: 'File not found.'});
+      return;
+    }
+
+    const drive = await uploadFileToDrive(filePath);
+    res.status(drive.uploaded ? 200 : 502).json({
+      ok: drive.uploaded,
+      id,
+      drive,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Unable to upload file to Google Drive.';
     res.status(500).json({ok: false, message});
   }
 });

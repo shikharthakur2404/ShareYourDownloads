@@ -24,8 +24,14 @@
         <button id="audioButton" data-format="audio" type="button">Audio</button>
       </div>
 
+      <label class="drive-toggle" for="driveToggle">
+        <input id="driveToggle" type="checkbox" />
+        Save to Google Drive
+      </label>
+
       <button id="downloadButton" class="download" type="button">Download</button>
       <p id="status" data-tone="info" aria-live="polite">Ready. Start the local server before downloading.</p>
+      <p id="driveLink" class="drive-link" hidden></p>
     </main>
 
     <script src="popup.js"></script>

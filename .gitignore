@@ -66,3 +66,8 @@ server/downloads/
 
 # testing
 /coverage
+
+# Local secrets
+.env
+server/.env
+*.env.local
