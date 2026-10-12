@@ -7,31 +7,56 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <main class="container">
-      <h1>Share Your Downloads</h1>
-      <p class="caption">Paste a YouTube URL or pull from the current tab.</p>
+    <main class="shell">
+      <header class="brand">
+        <div class="brand-mark" aria-hidden="true">↓</div>
+        <div class="brand-copy">
+          <h1>Share Your Downloads</h1>
+          <p class="caption">Paste a YouTube URL or pull from the current tab.</p>
+        </div>
+      </header>
 
-      <label for="urlInput">YouTube URL</label>
-      <textarea id="urlInput" rows="3" placeholder="https://youtube.com/watch?v=..."></textarea>
+      <section class="panel" aria-labelledby="urlLabel">
+        <label id="urlLabel" for="urlInput">YouTube URL</label>
+        <textarea
+          id="urlInput"
+          rows="3"
+          placeholder="https://youtube.com/watch?v=..."
+          spellcheck="false"
+        ></textarea>
 
-      <div class="row">
-        <button id="pasteButton" type="button">Paste</button>
-        <button id="tabButton" type="button">Use tab URL</button>
-      </div>
+        <div class="row">
+          <button id="pasteButton" type="button">Paste</button>
+          <button id="tabButton" type="button">Use tab URL</button>
+        </div>
+      </section>
 
-      <div class="toggle" role="radiogroup" aria-label="Format">
-        <button id="videoButton" class="selected" data-format="video" type="button">Video</button>
-        <button id="audioButton" data-format="audio" type="button">Audio</button>
-      </div>
+      <section class="panel compact" aria-label="Download options">
+        <div class="toggle" role="radiogroup" aria-label="Format">
+          <button id="videoButton" class="selected" data-format="video" type="button">
+            Video
+          </button>
+          <button id="audioButton" data-format="audio" type="button">Audio</button>
+        </div>
 
-      <label class="drive-toggle" for="driveToggle">
-        <input id="driveToggle" type="checkbox" />
-        Save to Google Drive
-      </label>
+        <label class="drive-toggle" for="driveToggle">
+          <span class="drive-copy">
+            <span class="drive-title">Save to Google Drive</span>
+            <span class="drive-hint">Upload after download finishes</span>
+          </span>
+          <input id="driveToggle" type="checkbox" />
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+      </section>
 
       <button id="downloadButton" class="download" type="button">Download</button>
-      <p id="status" data-tone="info" aria-live="polite">Ready. Start the local server before downloading.</p>
-      <p id="driveLink" class="drive-link" hidden></p>
+
+      <div class="status-block">
+        <p id="status" data-tone="info" aria-live="polite">
+          Ready. Start the local server before downloading.
+        </p>
+        <p id="driveLink" class="drive-link" hidden></p>
+      </div>
     </main>
 
     <script src="popup.js"></script>
