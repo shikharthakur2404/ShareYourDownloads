@@ -94,3 +94,15 @@ button:disabled {
   color: #d6ddfd;
   min-height: 16px;
 }
+
+#status[data-tone='success'] {
+  color: #7dffc4;
+}
+
+#status[data-tone='warn'] {
+  color: #ffd38a;
+}
+
+#status[data-tone='error'] {
+  color: #ff8e97;
+}

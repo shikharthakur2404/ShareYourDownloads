@@ -30,6 +30,13 @@ const makeStubResponse = (message: string): DownloadResponse => ({
   requestId: `stub-${Date.now()}`,
 });
 
+const makeErrorResponse = (message: string): DownloadResponse => ({
+  ok: false,
+  isStub: false,
+  message,
+  requestId: `err-${Date.now()}`,
+});
+
 interface ApiDownloadSuccessResponse {
   ok: true;
   id: string;
@@ -83,16 +90,15 @@ export const requestDownload = async ({
         ? payload.message
         : `Backend request failed (${response.status}).`;
 
-    return makeStubResponse(
-      `${failureMessage} Running in stub mode until backend + yt-dlp are available.`,
-    );
+    // Backend responded — this is a real error, not stub/offline mode.
+    return makeErrorResponse(failureMessage);
   } catch (error) {
     const errorMessage =
       error instanceof Error
         ? error.message
         : 'Unable to reach local backend server.';
     return makeStubResponse(
-      `${errorMessage} Start server on ${SERVER_BASE_URL} to enable real downloads.`,
+      `${errorMessage} Start the server on ${SERVER_BASE_URL} (\`cd server && npm run dev\`) to enable real downloads.`,
     );
   } finally {
     clearTimeout(timeoutId);

@@ -7,7 +7,7 @@
     "default_title": "Share Your Downloads",
     "default_popup": "popup.html"
   },
-  "permissions": ["activeTab", "tabs"],
+  "permissions": ["activeTab", "tabs", "clipboardRead"],
   "host_permissions": [
     "http://127.0.0.1:47821/*",
     "http://localhost:47821/*"

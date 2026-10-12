@@ -85,24 +85,45 @@ The MV3 extension provides:
 - Video/Audio choice
 - Download trigger via the same local backend API
 
-### Load extension (Chrome)
+Load the **unpacked** `extension/` folder from this repo (relative path: `extension/`). All Chromium browsers below use the same **Load unpacked** flow.
 
-1. Go to `chrome://extensions`
+### Chrome
+
+1. Open `chrome://extensions`
 2. Enable **Developer mode**
 3. Click **Load unpacked**
-4. Select `/home/runner/work/ShareYourDownloads/ShareYourDownloads/extension`
+4. Select the `extension/` folder in this repo
 
-### Load extension (Firefox)
+### Brave
 
-1. Go to `about:debugging#/runtime/this-firefox`
-2. Click **Load Temporary Add-on**
-3. Select `/home/runner/work/ShareYourDownloads/ShareYourDownloads/extension/manifest.json`
+1. Open `brave://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select the `extension/` folder in this repo
+
+### Microsoft Edge
+
+1. Open `edge://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select the `extension/` folder in this repo
+
+### Firefox (temporary)
+
+1. Open `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on…**
+3. Select `extension/manifest.json` in this repo
+
+### Safari
+
+Safari Web Extensions are **out of scope** for this project. Safari does not support loading an unpacked MV3 extension the same way Chromium browsers do (Xcode / Apple Developer packaging is required). Use Chrome, Brave, Edge, or Firefox for local testing.
 
 ## Current limitations
 
 - Real YouTube downloads depend on local backend + local yt-dlp availability.
 - Cloud/shared IP environments may hit YouTube anti-bot checks.
 - Optional cookies file can improve local success rates; no credential scraping or DRM bypass is implemented.
+- Status messages distinguish **stub mode** (backend offline / unreachable) from **real backend errors** (yt-dlp missing, download failed, etc.).
 
 ## Legal note
 

@@ -61,16 +61,25 @@ const App = () => {
       onProgress: nextProgress => setProgress(nextProgress),
     });
 
-    setProgress(100);
-
     if (response.ok) {
+      setProgress(100);
       setPhase('done');
-      setStatusMessage(`Download started (${response.requestId}).`);
+      setStatusMessage(
+        response.fileUrl
+          ? `Download ready (${response.requestId}).`
+          : `Download started (${response.requestId}).`,
+      );
       return;
     }
 
-    setPhase('done');
-    setStatusMessage(`Stub mode: ${response.message}`);
+    setProgress(0);
+    setPhase('error');
+    if (response.isStub) {
+      setStatusMessage(`Stub mode (backend offline): ${response.message}`);
+      return;
+    }
+
+    setStatusMessage(`Download failed: ${response.message}`);
   };
 
   return (

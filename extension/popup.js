@@ -13,8 +13,9 @@ const formatButtons = Array.from(document.querySelectorAll('.toggle button'));
 let selectedFormat = 'video';
 let isBusy = false;
 
-const setStatus = message => {
+const setStatus = (message, tone = 'info') => {
   status.textContent = message;
+  status.dataset.tone = tone;
 };
 
 const setBusy = busy => {
@@ -80,10 +81,23 @@ formatButtons.forEach(button => {
 pasteButton.addEventListener('click', async () => {
   try {
     const text = await navigator.clipboard.readText();
-    urlInput.value = text.trim();
-    setStatus('URL pasted from clipboard.');
+    const trimmed = text.trim();
+    if (!trimmed) {
+      setStatus('Clipboard is empty. Paste a URL manually.', 'warn');
+      return;
+    }
+    urlInput.value = trimmed;
+    setStatus(
+      isValidYouTubeUrl(trimmed)
+        ? 'URL pasted from clipboard.'
+        : 'Pasted text is not a supported YouTube URL.',
+      isValidYouTubeUrl(trimmed) ? 'info' : 'warn',
+    );
   } catch {
-    setStatus('Clipboard paste failed. Paste manually.');
+    setStatus(
+      'Clipboard paste blocked. Allow clipboard access for this extension, or paste manually (Ctrl/Cmd+V).',
+      'error',
+    );
   }
 });
 
@@ -93,12 +107,20 @@ tabButton.addEventListener('click', async () => {
       active: true,
       currentWindow: true,
     });
-    urlInput.value = (tab?.url || '').trim();
+    const tabUrl = (tab?.url || '').trim();
+    urlInput.value = tabUrl;
+    if (!tabUrl) {
+      setStatus('No active tab URL available.', 'warn');
+      return;
+    }
     setStatus(
-      tab?.url ? 'Loaded current tab URL.' : 'No active tab URL available.',
+      isValidYouTubeUrl(tabUrl)
+        ? 'Loaded current tab URL.'
+        : 'Tab URL loaded, but it is not a supported YouTube link.',
+      isValidYouTubeUrl(tabUrl) ? 'info' : 'warn',
     );
   } catch {
-    setStatus('Could not read active tab URL.');
+    setStatus('Could not read active tab URL.', 'error');
   }
 });
 
@@ -109,12 +131,15 @@ downloadButton.addEventListener('click', async () => {
 
   const url = getTrimmedUrl();
   if (!isValidYouTubeUrl(url)) {
-    setStatus('Enter a valid YouTube URL first.');
+    setStatus(
+      'Enter a valid YouTube URL first (watch, shorts, or youtu.be).',
+      'error',
+    );
     return;
   }
 
   setBusy(true);
-  setStatus(`Starting ${selectedFormat} download...`);
+  setStatus(`Starting ${selectedFormat} download...`, 'info');
 
   try {
     const response = await fetch(API_URL, {
@@ -126,13 +151,18 @@ downloadButton.addEventListener('click', async () => {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok || !data.ok) {
-      setStatus(data.message || `Request failed (${response.status}).`);
+      const detail =
+        data.message || `Request failed (${response.status}).`;
+      setStatus(`Backend error: ${detail}`, 'error');
       return;
     }
 
-    setStatus(`Download ready: ${data.fileName}`);
+    setStatus(`Download ready: ${data.fileName}`, 'success');
   } catch {
-    setStatus('Backend not reachable at 127.0.0.1:47821. Start server first.');
+    setStatus(
+      'Stub / offline: backend not reachable at 127.0.0.1:47821. Start the server (`cd server && npm run dev`), then retry.',
+      'warn',
+    );
   } finally {
     setBusy(false);
   }
