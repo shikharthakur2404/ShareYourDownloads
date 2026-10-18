@@ -17,6 +17,18 @@ const YT_DLP_BINARY = process.env.SYD_YTDLP_BINARY || 'yt-dlp';
 const COOKIES_FILE = process.env.SYD_COOKIES_FILE;
 const DOWNLOADS_DIR = path.resolve(__dirname, '..', 'downloads');
 
+/** Comma-separated browser origins. Non-browser clients (no Origin) stay allowed. */
+const DEFAULT_CORS_ORIGINS =
+  'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8081,http://127.0.0.1:8081';
+
+const parseCorsOrigins = (raw: string | undefined): string[] =>
+  (raw && raw.trim() ? raw : DEFAULT_CORS_ORIGINS)
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
+const allowedCorsOrigins = new Set(parseCorsOrigins(process.env.CORS_ORIGIN));
+
 type DownloadFormat = 'video' | 'audio';
 
 interface DownloadBody {
@@ -39,7 +51,24 @@ const YOUTUBE_HOSTS = new Set([
 ]);
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin(origin, callback) {
+      // React Native / curl / health checks omit Origin.
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedCorsOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    },
+  }),
+);
 app.use(express.json({limit: '32kb'}));
 
 const apiRateLimiter = rateLimit({
