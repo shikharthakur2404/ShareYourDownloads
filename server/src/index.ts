@@ -50,7 +50,14 @@ const YOUTUBE_HOSTS = new Set([
   'www.youtu.be',
 ]);
 
+const isExtensionOrigin = (origin: string): boolean =>
+  origin.startsWith('chrome-extension://') ||
+  origin.startsWith('moz-extension://') ||
+  origin.startsWith('mozilla-extension://');
+
 const app = express();
+// Local MVP binds 127.0.0.1 only. Allow listed localhost web origins plus
+// browser-extension popups (Edge/Chrome/Firefox) so popup fetch is not CORS-blocked.
 app.use(
   cors({
     origin(origin, callback) {
@@ -60,13 +67,15 @@ app.use(
         return;
       }
 
-      if (allowedCorsOrigins.has(origin)) {
+      if (allowedCorsOrigins.has(origin) || isExtensionOrigin(origin)) {
         callback(null, true);
         return;
       }
 
       callback(null, false);
     },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
   }),
 );
 app.use(express.json({limit: '32kb'}));
