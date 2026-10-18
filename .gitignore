@@ -41,6 +41,7 @@ npm-debug.log
 yarn-error.log
 server/dist/
 server/downloads/
+web/dist/
 
 # fastlane
 #

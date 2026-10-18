@@ -3,6 +3,9 @@
 const browserApi = window.browser ?? window.chrome;
 const API_URL = 'http://127.0.0.1:47821/api/download';
 const HEALTH_URL = 'http://127.0.0.1:47821/health';
+const HISTORY_KEY = 'syd.extension.history';
+const FORMAT_KEY = 'syd.extension.format';
+const MAX_HISTORY = 6;
 
 const urlInput = document.getElementById('urlInput');
 const status = document.getElementById('status');
@@ -11,9 +14,12 @@ const pasteButton = document.getElementById('pasteButton');
 const tabButton = document.getElementById('tabButton');
 const downloadButton = document.getElementById('downloadButton');
 const driveToggle = document.getElementById('driveToggle');
+const clearHistoryButton = document.getElementById('clearHistory');
+const historyList = document.getElementById('historyList');
+const historyEmpty = document.getElementById('historyEmpty');
 const formatButtons = Array.from(document.querySelectorAll('.toggle button'));
 
-let selectedFormat = 'video';
+let selectedFormat = localStorage.getItem(FORMAT_KEY) || 'video';
 let isBusy = false;
 
 const setStatus = (message, tone = 'info') => {
@@ -44,6 +50,7 @@ const setBusy = busy => {
     tabButton,
     downloadButton,
     driveToggle,
+    clearHistoryButton,
     ...formatButtons,
   ].forEach(control => {
     control.disabled = busy;
@@ -115,13 +122,75 @@ const refreshDriveAvailability = async () => {
   }
 };
 
+const readHistory = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeHistory = entries => {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, MAX_HISTORY)));
+};
+
+const syncFormatUI = () => {
+  formatButtons.forEach(option => {
+    option.classList.toggle(
+      'selected',
+      option.dataset.format === selectedFormat,
+    );
+  });
+  localStorage.setItem(FORMAT_KEY, selectedFormat);
+};
+
+const renderHistory = () => {
+  const entries = readHistory();
+  historyList.replaceChildren();
+  historyEmpty.hidden = entries.length > 0;
+
+  entries.forEach(entry => {
+    const li = document.createElement('li');
+    const reuse = document.createElement('button');
+    reuse.type = 'button';
+    reuse.className = 'history-item';
+    reuse.textContent = entry.url;
+    reuse.title = entry.url;
+    reuse.addEventListener('click', () => {
+      urlInput.value = entry.url;
+      selectedFormat = entry.format === 'audio' ? 'audio' : 'video';
+      syncFormatUI();
+      setStatus('Loaded from recent history.', 'info');
+    });
+    const meta = document.createElement('span');
+    meta.className = 'history-meta';
+    meta.textContent = entry.format;
+    li.append(reuse, meta);
+    historyList.appendChild(li);
+  });
+};
+
+const pushHistory = entry => {
+  const next = [
+    entry,
+    ...readHistory().filter(item => item.url !== entry.url),
+  ].slice(0, MAX_HISTORY);
+  writeHistory(next);
+  renderHistory();
+};
+
 formatButtons.forEach(button => {
   button.addEventListener('click', () => {
     selectedFormat = button.dataset.format;
-    formatButtons.forEach(option => {
-      option.classList.toggle('selected', option === button);
-    });
+    syncFormatUI();
   });
+});
+
+clearHistoryButton.addEventListener('click', () => {
+  writeHistory([]);
+  renderHistory();
+  setStatus('Recent history cleared.', 'info');
 });
 
 driveToggle.addEventListener('change', () => {
@@ -219,6 +288,8 @@ downloadButton.addEventListener('click', async () => {
       return;
     }
 
+    pushHistory({url, format: selectedFormat, at: Date.now()});
+
     if (data.drive?.uploaded && data.drive.webViewLink) {
       setStatus(`Download ready: ${data.fileName} (saved to Drive)`, 'success');
       setDriveLink(data.drive.webViewLink, 'Open in Google Drive');
@@ -244,4 +315,6 @@ downloadButton.addEventListener('click', async () => {
   }
 });
 
+syncFormatUI();
+renderHistory();
 refreshDriveAvailability();

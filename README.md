@@ -7,9 +7,41 @@ Share Your Downloads is a minimal project for a simple flow:
 3. Start the download request
 
 The repo includes:
-- React Native mobile app (MVP UI)
+- Local web app (`web/`) — paste URL → Video|Audio → Download
 - Local Node/TypeScript backend (`server/`) that runs yt-dlp
 - MV3 browser extension (`extension/`) that calls the same backend
+- React Native mobile app (MVP UI)
+
+## Quick start (server + webapp)
+
+Terminal 1 — backend (required for real downloads):
+
+```bash
+cd server
+npm install
+npm run dev
+```
+
+Health check: [http://127.0.0.1:47821/health](http://127.0.0.1:47821/health)
+
+Terminal 2 — web client:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Open [http://127.0.0.1:47831](http://127.0.0.1:47831), paste a YouTube URL, choose Video or Audio, optionally enable **Save to Google Drive**, then Download. The webapp talks to `http://127.0.0.1:47821` (same API as the extension).
+
+### Web app (`web/`)
+
+Vite (vanilla) client with:
+- Paste / type YouTube URL validation
+- Video | Audio format toggle (remembered in `localStorage`)
+- Optional Drive upload toggle (same `uploadToDrive` semantics as the extension)
+- Recent URL history in `localStorage`
+- Direct file open link via `/api/files/:id`
 
 ## Mobile app (React Native)
 
@@ -108,11 +140,12 @@ When the mobile app runs on Android emulator, `127.0.0.1` inside the app points 
 The MV3 extension provides:
 - Paste URL from clipboard
 - Use active tab URL
-- Video/Audio choice
+- Video/Audio choice (last choice remembered in `localStorage`)
 - Optional **Save to Google Drive** toggle (off by default)
+- Recent URL history in `localStorage` (click to reuse)
 - Download trigger via the same local backend API
 
-Load the **unpacked** `extension/` folder from this repo (relative path: `extension/`). All Chromium browsers below use the same **Load unpacked** flow.
+Load the **unpacked** `extension/` folder from this repo (relative path: `extension/`). All Chromium browsers below use the same **Load unpacked** flow. Manifest includes `browser_specific_settings.gecko` so Firefox temporary loading works without changes.
 
 ### Chrome
 
@@ -135,11 +168,17 @@ Load the **unpacked** `extension/` folder from this repo (relative path: `extens
 3. Click **Load unpacked**
 4. Select the `extension/` folder in this repo
 
-### Firefox (temporary)
+### Firefox (temporary add-on)
+
+Firefox cannot permanently install an unpacked MV3 folder without signing. For local testing:
 
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on…**
-3. Select `extension/manifest.json` in this repo
+3. Select `extension/manifest.json` in this repo (not the folder)
+4. Keep the debugging tab open — temporary add-ons unload when Firefox restarts
+5. Confirm the popup can reach `http://127.0.0.1:47821` (host permissions are already declared)
+
+The gecko id in `manifest.json` (`shareyourdownloads@example.com`) is only for temporary/local installs; change it before any AMO submission.
 
 ### Safari
 

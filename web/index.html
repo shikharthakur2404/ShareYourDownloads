@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Share Your Downloads</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true"></div>
+    <main class="stage">
+      <header class="brand">
+        <p class="mark">Share Your Downloads</p>
+        <h1>Paste a YouTube link. Get the file.</h1>
+        <p class="lede">
+          Local web client for the same backend as the browser extension —
+          video or audio, optional Drive upload.
+        </p>
+      </header>
+
+      <section class="composer" aria-labelledby="url-label">
+        <label id="url-label" for="urlInput">YouTube URL</label>
+        <div class="url-row">
+          <input
+            id="urlInput"
+            type="url"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="https://youtube.com/watch?v=… or youtu.be/…"
+          />
+          <button id="pasteButton" type="button" class="ghost">Paste</button>
+        </div>
+
+        <div class="options">
+          <div class="format" role="radiogroup" aria-label="Format">
+            <button type="button" class="chip selected" data-format="video">
+              Video
+            </button>
+            <button type="button" class="chip" data-format="audio">Audio</button>
+          </div>
+
+          <label class="drive" for="driveToggle">
+            <span>
+              <strong>Save to Google Drive</strong>
+              <small>Optional — same as the extension</small>
+            </span>
+            <input id="driveToggle" type="checkbox" />
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+        </div>
+
+        <button id="downloadButton" type="button" class="cta">Download</button>
+
+        <div class="status-block">
+          <p id="status" data-tone="info" aria-live="polite">
+            Checking local server…
+          </p>
+          <p id="resultLink" class="result-link" hidden></p>
+        </div>
+      </section>
+
+      <section class="history" aria-labelledby="history-title">
+        <div class="history-head">
+          <h2 id="history-title">Recent</h2>
+          <button id="clearHistory" type="button" class="text-btn">Clear</button>
+        </div>
+        <ul id="historyList"></ul>
+        <p id="historyEmpty" class="empty">No downloads yet this session.</p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

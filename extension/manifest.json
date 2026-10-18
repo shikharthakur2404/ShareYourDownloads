@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Share Your Downloads",
-  "version": "0.1.0",
-  "description": "Send YouTube URLs to the local Share Your Downloads backend.",
+  "version": "0.1.1",
+  "description": "Send YouTube URLs to the local Share Your Downloads backend. Chromium + Firefox temporary add-on.",
   "action": {
     "default_title": "Share Your Downloads",
     "default_popup": "popup.html"

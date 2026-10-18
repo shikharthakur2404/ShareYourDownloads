@@ -19,7 +19,7 @@ const DOWNLOADS_DIR = path.resolve(__dirname, '..', 'downloads');
 
 /** Comma-separated browser origins. Non-browser clients (no Origin) stay allowed. */
 const DEFAULT_CORS_ORIGINS =
-  'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8081,http://127.0.0.1:8081';
+  'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8081,http://127.0.0.1:8081,http://localhost:47831,http://127.0.0.1:47831';
 
 const parseCorsOrigins = (raw: string | undefined): string[] =>
   (raw && raw.trim() ? raw : DEFAULT_CORS_ORIGINS)
