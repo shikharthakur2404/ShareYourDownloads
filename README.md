@@ -156,3 +156,9 @@ Safari Web Extensions are **out of scope** for this project. Safari does not sup
 ## Legal note
 
 Downloading from YouTube may violate YouTube Terms of Service and copyright law depending on content and jurisdiction. Use this project only for content you have rights to access offline and for personal use.
+
+---
+
+Copyright © 2026 Shikhar Thakur.
+
+Released under the MIT License — see [LICENSE](LICENSE).
